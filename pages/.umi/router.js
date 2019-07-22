@@ -1,27 +1,33 @@
 import React from 'react';
 import { Router as DefaultRouter, Route, Switch } from 'react-router-dom';
 import dynamic from 'umi/dynamic';
-import renderRoutes from 'umi/_renderRoutes';
+import renderRoutes from 'umi/lib/renderRoutes';
+import history from '@tmp/history';
 
+const Router = DefaultRouter;
 
-let Router = DefaultRouter;
-
-let routes = [
+const routes = [
   {
-    "path": "/",
-    "exact": true,
-    "component": require('../index.js').default
+    path: '/',
+    exact: true,
+    component: require('../index.js').default,
   },
   {
-    "component": () => React.createElement(require('/Users/zhengdayong/.config/yarn/global/node_modules/umi-build-dev/lib/plugins/404/NotFound.js').default, { pagesPath: 'pages', hasRoutesInConfig: false })
-  }
+    component: () =>
+      React.createElement(
+        require('/Users/zhengdayong/node_modules/umi-build-dev/lib/plugins/404/NotFound.js')
+          .default,
+        { pagesPath: 'pages', hasRoutesInConfig: false },
+      ),
+  },
 ];
 window.g_routes = routes;
-window.g_plugins.applyForEach('patchRoutes', { initialValue: routes });
+const plugins = require('umi/_runtimePlugin');
+plugins.applyForEach('patchRoutes', { initialValue: routes });
 
 // route change handler
 function routeChangeHandler(location, action) {
-  window.g_plugins.applyForEach('onRouteChange', {
+  plugins.applyForEach('onRouteChange', {
     initialValue: {
       routes,
       location,
@@ -29,13 +35,11 @@ function routeChangeHandler(location, action) {
     },
   });
 }
-window.g_history.listen(routeChangeHandler);
-routeChangeHandler(window.g_history.location);
+history.listen(routeChangeHandler);
+routeChangeHandler(history.location);
 
-export default function RouterWrapper() {
-  return (
-<Router history={window.g_history}>
-      { renderRoutes(routes, {}) }
-    </Router>
-  );
+export { routes };
+
+export default function RouterWrapper(props = {}) {
+  return <Router history={history}>{renderRoutes(routes, props)}</Router>;
 }
